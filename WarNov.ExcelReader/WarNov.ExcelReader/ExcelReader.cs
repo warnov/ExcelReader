@@ -1,20 +1,16 @@
 ﻿using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace WarNov.ExcelReader
 {
     public static class ExcelReader
     {
-        public static string ReadCell(SpreadsheetDocument doc, int sheetNumber, int rowNumber, int cellNumber)
+        public static string ReadCell(SpreadsheetDocument doc, int sheetNumber, int rowNumber, string columnName)
         {
             sheetNumber--;
             rowNumber--;
-            cellNumber--;
             WorkbookPart wbPart = doc.WorkbookPart;
             Sheet mysheet = (Sheet)doc.WorkbookPart.Workbook.Sheets.ChildElements.GetItem(sheetNumber);
             Worksheet Worksheet = ((WorksheetPart)wbPart.GetPartById(mysheet.Id)).Worksheet;
@@ -23,10 +19,10 @@ namespace WarNov.ExcelReader
             Row currentrow = (Row)Rows.ChildElements.GetItem(rowNumber);
             var columnsForCurrentRow = currentrow.ChildElements.Count();
             string currentcellvalue = string.Empty;
-            if (cellNumber < columnsForCurrentRow)
-            {
-                Cell currentcell = (Cell)currentrow.ChildElements.GetItem(cellNumber);
 
+            Cell currentcell = GetCell(currentrow, columnName);
+            if (currentcell != null)
+            {
                 if (currentcell.DataType != null)
                 {
                     if (currentcell.DataType == CellValues.SharedString)
@@ -57,8 +53,9 @@ namespace WarNov.ExcelReader
                 {
                     currentcellvalue = currentcell.InnerText;
                 }
+                return currentcellvalue.Replace('"', '\'');
             }
-            return currentcellvalue.Replace('"', '\'');
+            else return string.Empty;
         }
 
         public static string SheetName(SpreadsheetDocument doc, int sheetNumber)
@@ -80,5 +77,14 @@ namespace WarNov.ExcelReader
             return $"Error reading the cell {row}, {column} in the tab {tab}";
         }
 
+        private static Cell GetCell(Row row, string columnName)
+        {
+            if (row == null)
+                return null;
+
+            return row.Elements<Cell>().Where(c => string.Compare
+                      (c.CellReference.Value, columnName +
+                      row.RowIndex, true) == 0).FirstOrDefault();
+        }
     }
 }
