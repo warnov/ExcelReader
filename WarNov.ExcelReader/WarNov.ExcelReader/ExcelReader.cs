@@ -7,6 +7,12 @@ namespace WarNov.ExcelReader
 {
     public static class ExcelReader
     {
+        public static string ReadCell(string docPath, int sheetNumber, int rowNumber, string columnName)
+        {
+            var doc = SpreadsheetDocument.Open(docPath, false);
+            return ReadCell(doc, sheetNumber, rowNumber, columnName);
+        }
+
         public static string ReadCell(SpreadsheetDocument doc, int sheetNumber, int rowNumber, string columnName)
         {
             sheetNumber--;
